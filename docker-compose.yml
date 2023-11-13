@@ -1,0 +1,62 @@
+version: '3.5'
+
+services:
+  nginx-laravel-store:
+    container_name: nginx-laravel-store
+    image: nginx:1.24
+    restart: "no"
+    ports:
+      - "80:80"
+    volumes:
+      - .:/var/www/
+      - ./.docker/config/nginx/:/etc/nginx/conf.d/
+      - ./.docker/logs/nginx:/var/log/nginx/
+    networks:
+      - web-network-laravel-store
+
+  php-laravel-store:
+    build:
+      context: ./.docker/
+    container_name: php-laravel-store
+    restart: "no"
+    working_dir: /var/www
+    volumes:
+      - .:/var/www/
+    networks:
+      - web-network-laravel-store
+
+  mysql-laravel-store:
+    container_name: mysql-laravel-store
+    image: mysql:latest
+    restart: "no"
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./logs/mysql/:/var/logs/mysql
+      - db-laravel-store:/var/lib/mysql
+    security_opt:
+      - seccomp:unconfined
+    environment:
+      MYSQL_ROOT_PASSWORD: local
+      MYSQL_DATABASE: store
+      MYSQL_USER: laravel
+      MYSQL_PASSWORD: laravel
+    networks:
+      - web-network-laravel-store
+
+  redis-laravel-store:
+    container_name: redis-laravel-store
+    image: redis:7.0.5
+    ports:
+      - "6379:6379"
+    networks:
+      - web-network-laravel-store
+
+volumes:
+    db-laravel-store:
+        name: db-laravel-store
+
+networks:
+  web-network-laravel-store:
+    name: web-network-laravel-store
+    driver: bridge
